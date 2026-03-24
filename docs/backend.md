@@ -31,6 +31,28 @@ kill $(lsof -ti :5001); node src/app.js
 - `swagger-ui-express`: Swagger UI 제공
 - 각 엔드포인트에 `tags`로 그룹 분류 (예: `Todo`, `Schedule`)
 
+### 새 API 추가 시 Swagger 작성법
+
+전부 외울 필요 없음. 기존 API 주석을 복사 → 아래 항목만 수정.
+
+| 바꿀 항목 | 예시 |
+|-----------|------|
+| 경로 | `/api/todos/{id}` |
+| method | `get`, `post`, `patch`, `delete` |
+| operationId | `getTodoById` |
+| tags | `[Todo]` |
+| summary | `Get a todo by id` (영어) |
+| description | 한글 설명 |
+| parameters | path/query 파라미터 |
+| requestBody | 요청 body 스키마 |
+| responses | 상태코드 + description (영어: OK, Created, Not Found 등) |
+
+### 작성 규칙
+
+- summary, response description → 영어
+- description (API 설명) → 한글
+- 새 스키마가 필요하면 `swagger.js`의 components에 추가
+
 ## Orval 연동 (프론트엔드)
 
 백엔드 Swagger 스펙 기반으로 React Query 훅 자동 생성.
