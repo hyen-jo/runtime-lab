@@ -1,14 +1,23 @@
+import { useEffect, useState } from "react";
 import ToggleButton from "../feature/ToggleButton";
 import useToggle from "../hooks/useToggle";
 
-const Home = () => {
-  // disabled 상태를, 만약 더미 데이터의 값중에 특정 값이 존재할 때로 설정
-  const dummyData = [
-    { id: 1, name: "Item 1" },
-    { id: 2, name: "Item 2" },
-  ];
+interface Todo {
+  id: number;
+  title: string;
+  completed: boolean;
+}
 
-  const isDisabled = dummyData.some((item) => item.id === 4);
+const Home = () => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+
+  useEffect(() => {
+    fetch("/api/todos")
+      .then((res) => res.json())
+      .then((data) => setTodos(data));
+  }, []);
+
+  const isDisabled = todos.length === 0;
 
   const [value, set] = useToggle(false);
   return (
