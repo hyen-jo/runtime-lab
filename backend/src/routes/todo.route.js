@@ -28,8 +28,15 @@ let todos = [{ id: 1, title: "운동하기", completed: false }];
  *               items:
  *                 $ref: '#/components/schemas/Todo'
  */
-router.get("/", (req, res) => {
-  res.json(todos);
+router.get("/todos", (req, res) => {
+  let result = [...todos];
+
+  if (req.query.completed !== undefined) {
+    const completed = req.query.completed === "true";
+    result = result.filter((t) => t.completed === completed);
+  }
+
+  res.json(result);
 });
 
 /**
@@ -63,7 +70,7 @@ router.get("/", (req, res) => {
  *       400:
  *         description: Bad Request
  */
-router.post("/add", validate(createTodoSchema), (req, res) => {
+router.post("/todos/add", validate(createTodoSchema), (req, res) => {
   const { title, description } = req.body;
 
   const newTodo = {
@@ -111,7 +118,7 @@ router.post("/add", validate(createTodoSchema), (req, res) => {
  *       404:
  *         description: Not Found
  */
-router.patch("/:id", validate(updateTodoSchema), (req, res) => {
+router.patch("/todos/:id", validate(updateTodoSchema), (req, res) => {
   const id = Number(req.params.id);
   const todo = todos.find((t) => t.id === id);
   if (!todo) return res.status(404).send();
@@ -120,7 +127,7 @@ router.patch("/:id", validate(updateTodoSchema), (req, res) => {
   res.json(todo);
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/todos/:id", (req, res) => {
   const id = Number(req.params.id);
   const index = todos.findIndex((t) => t.id === id);
 
@@ -129,5 +136,16 @@ router.delete("/:id", (req, res) => {
   todos.splice(index, 1);
   res.status(204).send();
 });
+
+router.get("/todos/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const todo = todos.find((t) => t.id === id);
+  if (!todo) {
+    return res.status(404).json({ message: "Todo not found" });
+  }
+  res.json(todo);
+});
+
+router.get("/todos?complicated=true");
 
 module.exports = router;

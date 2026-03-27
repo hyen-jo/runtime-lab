@@ -1,0 +1,33 @@
+{
+  "name": "runtime-lab",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hyen-jo/runtime-lab.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hyen-jo/runtime-lab/issues"
+  },
+  "homepage": "https://github.com/hyen-jo/runtime-lab#readme",
+  "description": "",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  },
+  "lint-staged": {
+    "sandbox/react-vite/src/**/*.{ts,tsx}": [
+      "sandbox/react-vite/node_modules/.bin/eslint --fix --config sandbox/react-vite/eslint.config.js"
+    ]
+  }
+}

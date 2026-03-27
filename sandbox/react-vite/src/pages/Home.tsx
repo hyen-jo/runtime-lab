@@ -1,23 +1,12 @@
-import { useEffect, useState } from "react";
 import ToggleButton from "../feature/ToggleButton";
 import useToggle from "../hooks/useToggle";
-
-interface Todo {
-  id: number;
-  title: string;
-  completed: boolean;
-}
+import { useGetTodos } from "../api/generated";
 
 const Home = () => {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const { data: todos } = useGetTodos();
+  console.log("data", todos);
 
-  useEffect(() => {
-    fetch("/api/todos")
-      .then((res) => res.json())
-      .then((data) => setTodos(data));
-  }, []);
-
-  const isDisabled = todos.length === 0;
+  const isDisabled = false;
 
   const [value, set] = useToggle(false);
   return (
