@@ -16,6 +16,19 @@ const swaggerUi = require("swagger-ui-express");
  *           type: string
  *         completed:
  *           type: boolean
+ *     PaginatedTodos:
+ *       type: object
+ *       properties:
+ *         total:
+ *           type: integer
+ *         page:
+ *           type: integer
+ *         limit:
+ *           type: integer
+ *         data:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Todo'
  */
 
 const swaggerSpec = swaggerJsdoc({

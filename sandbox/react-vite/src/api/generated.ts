@@ -31,6 +31,51 @@ export interface Todo {
   completed?: boolean;
 }
 
+export interface PaginatedTodos {
+  total?: number;
+  page?: number;
+  limit?: number;
+  data?: Todo[];
+}
+
+export type GetTodosParams = {
+/**
+ * 완료 여부로 필터링
+ */
+completed?: boolean;
+/**
+ * 제목 검색어
+ */
+keyword?: string;
+/**
+ * 정렬 기준 필드
+ */
+sort?: GetTodosSort;
+/**
+ * 정렬 방향
+ */
+order?: GetTodosOrder;
+};
+
+export type GetTodosSort = typeof GetTodosSort[keyof typeof GetTodosSort];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetTodosSort = {
+  id: 'id',
+  title: 'title',
+  completed: 'completed',
+} as const;
+
+export type GetTodosOrder = typeof GetTodosOrder[keyof typeof GetTodosOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetTodosOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
 export type AddTodoBody = {
   title: string;
   description?: string;
@@ -41,16 +86,18 @@ export type UpdateTodoBody = {
 };
 
 /**
- * @summary 할 일 목록 조회
+ * 등록된 모든 할 일을 배열로 반환합니다. 필터, 검색, 정렬을 지원합니다.
+ * @summary Get all todos
  */
 export const getTodos = (
-    
+    params?: GetTodosParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customFetcher<Todo[]>(
-      {url: `/api/todos`, method: 'GET', signal
+      return customFetcher<PaginatedTodos>(
+      {url: `/api/todos`, method: 'GET',
+        params, signal
     },
       );
     }
@@ -58,23 +105,23 @@ export const getTodos = (
 
 
 
-export const getGetTodosQueryKey = () => {
+export const getGetTodosQueryKey = (params?: GetTodosParams,) => {
     return [
-    `/api/todos`
+    `/api/todos`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getGetTodosQueryOptions = <TData = Awaited<ReturnType<typeof getTodos>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodos>>, TError, TData>>, }
+export const getGetTodosQueryOptions = <TData = Awaited<ReturnType<typeof getTodos>>, TError = unknown>(params?: GetTodosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodos>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetTodosQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetTodosQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTodos>>> = ({ signal }) => getTodos(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTodos>>> = ({ signal }) => getTodos(params, signal);
 
       
 
@@ -88,7 +135,7 @@ export type GetTodosQueryError = unknown
 
 
 export function useGetTodos<TData = Awaited<ReturnType<typeof getTodos>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodos>>, TError, TData>> & Pick<
+ params: undefined |  GetTodosParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodos>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getTodos>>,
           TError,
@@ -98,7 +145,7 @@ export function useGetTodos<TData = Awaited<ReturnType<typeof getTodos>>, TError
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetTodos<TData = Awaited<ReturnType<typeof getTodos>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodos>>, TError, TData>> & Pick<
+ params?: GetTodosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodos>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getTodos>>,
           TError,
@@ -108,19 +155,19 @@ export function useGetTodos<TData = Awaited<ReturnType<typeof getTodos>>, TError
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetTodos<TData = Awaited<ReturnType<typeof getTodos>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodos>>, TError, TData>>, }
+ params?: GetTodosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodos>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 할 일 목록 조회
+ * @summary Get all todos
  */
 
 export function useGetTodos<TData = Awaited<ReturnType<typeof getTodos>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodos>>, TError, TData>>, }
+ params?: GetTodosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodos>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetTodosQueryOptions(options)
+  const queryOptions = getGetTodosQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -133,7 +180,8 @@ export function useGetTodos<TData = Awaited<ReturnType<typeof getTodos>>, TError
 
 
 /**
- * @summary 할 일 추가
+ * 새로운 할 일을 생성합니다. title은 필수값입니다.
+ * @summary Add a todo
  */
 export const addTodo = (
     addTodoBody: AddTodoBody,
@@ -151,7 +199,7 @@ export const addTodo = (
   
 
 
-export const getAddTodoMutationOptions = <TError = unknown,
+export const getAddTodoMutationOptions = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addTodo>>, TError,{data: AddTodoBody}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof addTodo>>, TError,{data: AddTodoBody}, TContext> => {
 
@@ -178,12 +226,12 @@ const {mutation: mutationOptions} = options ?
 
     export type AddTodoMutationResult = NonNullable<Awaited<ReturnType<typeof addTodo>>>
     export type AddTodoMutationBody = AddTodoBody
-    export type AddTodoMutationError = unknown
+    export type AddTodoMutationError = void
 
     /**
- * @summary 할 일 추가
+ * @summary Add a todo
  */
-export const useAddTodo = <TError = unknown,
+export const useAddTodo = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addTodo>>, TError,{data: AddTodoBody}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof addTodo>>,
@@ -198,7 +246,8 @@ export const useAddTodo = <TError = unknown,
     }
     
 /**
- * @summary 할 일 수정
+ * 특정 할 일의 완료 상태를 수정합니다.
+ * @summary Update a todo
  */
 export const updateTodo = (
     id: number,
@@ -216,7 +265,7 @@ export const updateTodo = (
   
 
 
-export const getUpdateTodoMutationOptions = <TError = void,
+export const getUpdateTodoMutationOptions = <TError = void | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTodo>>, TError,{id: number;data: UpdateTodoBody}, TContext>, }
 ): UseMutationOptions<Awaited<ReturnType<typeof updateTodo>>, TError,{id: number;data: UpdateTodoBody}, TContext> => {
 
@@ -243,12 +292,12 @@ const {mutation: mutationOptions} = options ?
 
     export type UpdateTodoMutationResult = NonNullable<Awaited<ReturnType<typeof updateTodo>>>
     export type UpdateTodoMutationBody = UpdateTodoBody
-    export type UpdateTodoMutationError = void
+    export type UpdateTodoMutationError = void | void
 
     /**
- * @summary 할 일 수정
+ * @summary Update a todo
  */
-export const useUpdateTodo = <TError = void,
+export const useUpdateTodo = <TError = void | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTodo>>, TError,{id: number;data: UpdateTodoBody}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateTodo>>,
@@ -261,3 +310,156 @@ export const useUpdateTodo = <TError = void,
 
       return useMutation(mutationOptions, queryClient);
     }
+    
+/**
+ * 특정 할 일을 삭제합니다.
+ * @summary Delete a todo
+ */
+export const deleteTodo = (
+    id: number,
+ ) => {
+      
+      
+      return customFetcher<void>(
+      {url: `/api/todos/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getDeleteTodoMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTodo>>, TError,{id: number}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTodo>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteTodo'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTodo>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteTodo(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTodoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTodo>>>
+    
+    export type DeleteTodoMutationError = void
+
+    /**
+ * @summary Delete a todo
+ */
+export const useDeleteTodo = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTodo>>, TError,{id: number}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTodo>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteTodoMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * id로 특정 할 일을 조회합니다.
+ * @summary Get a todo by id
+ */
+export const getTodoById = (
+    id: number,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customFetcher<Todo>(
+      {url: `/api/todos/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getGetTodoByIdQueryKey = (id?: number,) => {
+    return [
+    `/api/todos/${id}`
+    ] as const;
+    }
+
+    
+export const getGetTodoByIdQueryOptions = <TData = Awaited<ReturnType<typeof getTodoById>>, TError = void>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodoById>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTodoByIdQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTodoById>>> = ({ signal }) => getTodoById(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTodoById>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTodoByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getTodoById>>>
+export type GetTodoByIdQueryError = void
+
+
+export function useGetTodoById<TData = Awaited<ReturnType<typeof getTodoById>>, TError = void>(
+ id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodoById>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTodoById>>,
+          TError,
+          Awaited<ReturnType<typeof getTodoById>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTodoById<TData = Awaited<ReturnType<typeof getTodoById>>, TError = void>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodoById>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTodoById>>,
+          TError,
+          Awaited<ReturnType<typeof getTodoById>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTodoById<TData = Awaited<ReturnType<typeof getTodoById>>, TError = void>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodoById>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a todo by id
+ */
+
+export function useGetTodoById<TData = Awaited<ReturnType<typeof getTodoById>>, TError = void>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTodoById>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTodoByIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}

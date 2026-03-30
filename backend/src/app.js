@@ -11,7 +11,7 @@ app.use(express.json());
 setupSwagger(app);
 
 // 라우터
-app.use("/api/todos", todoRouter);
+app.use("/api", todoRouter);
 
 // 서버 시작
 const PORT = 5001;

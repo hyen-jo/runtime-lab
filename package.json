@@ -27,7 +27,7 @@
   },
   "lint-staged": {
     "sandbox/react-vite/src/**/*.{ts,tsx}": [
-      "sandbox/react-vite/node_modules/.bin/eslint --fix --config sandbox/react-vite/eslint.config.js"
+      "sandbox/react-vite/node_modules/.bin/eslint --fix --config sandbox/react-vite/eslint.config.js --ignore-pattern **/api/** --ignore-pattern **/components/ui/**"
     ]
   }
 }
